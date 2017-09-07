@@ -257,7 +257,7 @@ io.sockets.on('connection', function(socket) {
     //  msg
     //  user
     socket.on('message', function(msg) {
-        socket.broadcast.to(soconfig.hailId).emit('message', {state:0,user:socket.nickname, msg:msg,op:'message'});
+        socket.broadcast.to(config.hailId).emit('message', msg);
     });
     //new image get
     socket.on('img', function(imgData, color) {
