@@ -22,20 +22,42 @@ var io = require('socket.io')(),
         login 0:成功 1已经存在
         register
  */
+var messageFactory = {
+    'welcome': function(user) {
+        return {
+            type: 'welcome',
+            content: `welcome ${user.name} join the chat`
+        }
+    },
+    'message': function(user, message) {
+        return {
+            type: 'message',
+            content: `${message}`
+        }
+    },
+}
+
+
 io.sockets.on('connection', function(socket) {
+    console.log('connected');
+
     //new user login
     //loginOp
     //  state:0/1
     //  msg:''
     //  
     socket.on('login', function(user) {
+        socket.join(config.hailId)
+        socket.emit('logined', user);
+        socket.broadcast.to(config.hailId).emit('message', messageFactory.welcome(user));
+        /*
         console.log('socket login' + user.nickname);
         if (users.indexOf(user.nickname) > -1) {
-            socket.emit('loginOp',{state:1,msg:'用户已经登录了'});
+            socket.emit('error',{state:1,msg:'用户已经登录了'});
         } else {
             //socket.userIndex = users.length;
             socket.nickname = user.nickname;         //给socket一个标志，本来可以join这样也行
-            socket.emit('loginOp',{state:0,msg:'登录成功'});
+            socket.emit('logined',{state:0,msg:'登录成功'});
             //io.sockets.emit('system', nickname, users.length, 'login');
             //默认加入大厅
             socket.join(config.hailId);  
@@ -44,7 +66,7 @@ io.sockets.on('connection', function(socket) {
             socket.emit('hailOp',{state:0,userNum:users.length,msg:'',op:'hailUserNum'});
             socket.broadcast.to(config.hailId).emit('hailOp',{state:0,userNum:users.length,msg:'',op:'hailUserNum'});
             //hailUsers.push(user);
-        };
+        };*/
     });
     //create room
     //roomOp
@@ -234,15 +256,8 @@ io.sockets.on('connection', function(socket) {
     //  state:
     //  msg
     //  user
-    socket.on('chatHail', function(msg) {
-        if(!config.HailModel){
-            socket.emit('hailMsg',{user:'System',msg:'当前没有开启大厅模式'});
-            return;
-        }
-        console.log('socket chatHail');
-        //大厅广播
-        socket.emit('hailOp',{state:0,user:socket.nickname,msg:msg,op:'message'});
-        socket.broadcast.to(config.hailId).emit('hailOp', {state:0,user:socket.nickname, msg:msg,op:'message'});
+    socket.on('message', function(msg) {
+        socket.broadcast.to(soconfig.hailId).emit('message', {state:0,user:socket.nickname, msg:msg,op:'message'});
     });
     //new image get
     socket.on('img', function(imgData, color) {
